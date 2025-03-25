@@ -4,12 +4,17 @@
   "description": "rest api practice",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node server.ts",
     "dev": "nodemon server.ts"
   },
   "author": "Raheem",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "^5.8.2"
+    "@eslint/js": "^9.23.0",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0"
   }
 }
