@@ -2,9 +2,13 @@ import express, { Request, Response, NextFunction } from 'express';
 import createHttpError from 'http-errors';
 import globalErrorHandler from './middlewares/globalErrorHandler';
 import userRouter from './user/userRouter';
+import cookieParser  from "cookie-parser";
+
 
 const app = express();
 app.use(express.json());
+
+app.use(cookieParser());
 
 // Routes
 app.get('/', (req: Request, res: Response, next: NextFunction) => {
