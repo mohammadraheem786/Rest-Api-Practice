@@ -9,7 +9,12 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
         const error = createHttpError(400, 'Missing required fields: name, email, password');
         return next(error); // Ensure to return to avoid further execution
     }
-    // Creation
+
+    //Checking if user already exists
+
+    const user = await User.findOne({ email });
+    if (!user) {
+         // Creation
     try {
         const newUser = new User({
             name,
@@ -21,6 +26,12 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     } catch (error) {
         next(error);
     }
+    }else{
+        const error = createHttpError(400, 'User already exists');
+        return next(error); // Ensure to return to avoid further
+    }
+
+   
 };
 
 export { createUser };
