@@ -34,26 +34,74 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 
         await newUser.save();
 
-        // Token generation
-        const token = jwt.sign(
-            { id: newUser._id, email: newUser.email },
-            process.env.JWT_SECRET as string,
-            { expiresIn: '1h' }
-        );
-
-        // Set the token in a cookie
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV !== 'production',
-            sameSite: 'strict',
-            maxAge: 3600000, // 1 hour in milliseconds
-            path: '/'
-        });
-
         res.status(201).json(newUser);
     } catch (error) {
         next(error);
     }
 };
 
-export { createUser };
+const logError = (error: unknown) => console.error("Error:", error);
+
+// Helper to get JWT secret
+const getJwtSecret = (): string => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error("JWT_SECRET is not defined in environment variables");
+    }
+    return secret;
+};
+
+const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+
+    try {
+        // Validation
+        if (!email || !password) {
+            throw createHttpError(400, "Missing required fields: email or password");
+        }
+
+        // Find user
+        const isUser = await User.findOne({ email });
+        if (!isUser) {
+            throw createHttpError(401, "Invalid credentials");
+        }
+
+        // Compare password
+        const isValidPassword = await bcrypt.compare(password, isUser.password);
+        if (!isValidPassword) {
+            throw createHttpError(401, "Invalid credentials");
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: isUser._id, email: isUser.email },
+            getJwtSecret(),
+            { expiresIn: "1h" }
+        );
+
+        // Set token in a cookie
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production", // Secure only in production
+            sameSite: "strict",
+            maxAge: 3600000, // 1 hour in milliseconds
+            path: "/",
+        });
+
+        // Send success response
+        res.status(201).json({ message: "Login successful" });
+    } catch (error) {
+        logError(error); // Log for debugging
+
+        if (error instanceof Error) {
+            return next(
+                createHttpError.isHttpError(error)
+                    ? error
+                    : createHttpError(500, "Internal server error")
+            );
+        }
+        next(createHttpError(500, "Unknown error occurred"));
+    }
+};
+
+export { createUser,loginUser };

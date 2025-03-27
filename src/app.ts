@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import createHttpError from 'http-errors';
 import globalErrorHandler from './middlewares/globalErrorHandler';
 import userRouter from './user/userRouter';
+import bookRouter from './book/bookRouter';
 import cookieParser  from "cookie-parser";
 
 
@@ -20,8 +21,11 @@ app.get('/', (req: Request, res: Response, next: NextFunction) => {
 // User routes
 app.use('/users', userRouter);
 
+//book routes
+app.use('/books', bookRouter);
+
 // 404 Handler (AFTER routes)
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, res: Response) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
