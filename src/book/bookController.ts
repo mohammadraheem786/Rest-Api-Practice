@@ -1,5 +1,6 @@
 import book from '../models/bookModel';
 import path from 'node:path';
+import fs from 'node:fs';
 import createHttpError from "http-errors";
 import { Request, Response, NextFunction } from "express";
 import cloudinaryConfig from '../config/cloudinaryConfig';
@@ -44,13 +45,13 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
         const bookFile = files.file[0];
         const bookFileName = bookFile.filename;
         const bookFilePath = path.resolve(__dirname, '../../public/uploads', bookFileName);
-
+        const bookFileType = bookFile.mimetype.split('/').at(-1)
         // Upload book PDF to Cloudinary
         const bookFileUploadResult = await cloudinary.uploader.upload(bookFilePath, {
             resource_type: "raw",
             filename_override: bookFileName,
             folder: "book-pdfs",
-            format: "pdf",
+            format: bookFileType,
         });
 
         // Log results
@@ -78,6 +79,18 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
             file: bookFileUploadResult.secure_url, // Match schema field name
         });
         await newBook.save();
+
+
+        //delete files from local storage
+        try {
+            await fs.promises.unlink(coverImageFilepath);
+        await fs.promises.unlink(bookFilePath);
+
+        } catch (error) {
+            console.error("Error deleting files:", error);
+            // Handle error if needed, but don't throw to avoid crashing the server                                                                                                 
+        }
+        
 
         // Send response
         res.status(201).json({
